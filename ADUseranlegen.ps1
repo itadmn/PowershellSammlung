@@ -41,11 +41,13 @@ if ($Name -eq ""){$Name = Read-Host "Name"}
 if ($VorName -eq ""){$VorName = Read-Host "VorName"}
 if ($VorName -eq ""){$VorName = $Betrieb}
 
-$PasswortDatei = "D:\PasswortDatei.txt"
+$AdminBenutzer = "" #ToDo Admin Benutzer eintragen, welcher den Benutzer in dem AD anlegt (z.B. Domänenadministrator -> domain\admin)
 $ADhost = "" #ToDo IP-Adr. einfügen
+$PasswortDatei = "D:\PasswortDatei.txt"
+
 
 $pass = Get-Content $PasswortDatei | ConvertTo-SecureString
-$LogIn = New-Object System.Management.Automation.PsCredential("*hier User*", $pass)
+$LogIn = New-Object System.Management.Automation.PsCredential($AdminBenutzer, $pass)
 $Fehler="true"
 Try  { $Script:GetADUserResult =Get-ADUser -Identity $Betrieb$Name -Server $ADhost -credential $LogIn} Catch {$Fehler="false"}
 if ($Fehler -eq "true"){write-Host "User exestiert schon"; exit}
@@ -69,7 +71,7 @@ $neu=$gruppe.name
 #####LoginScript#####
 $LoginScript="***.cmd"
 $LoginPath="\\******.local\NETLOGON\$Betrieb$LoginScript"
-if (Invoke-Command -ComputerName ********* -ScriptBlock {Test-Path -path $args[0]} -argumentlist $LoginPath -credential $LogIn) {$LoginScript="$Betrieb$LoginScript"}
+if (Invoke-Command -ComputerName $ADhost -ScriptBlock {Test-Path -path $args[0]} -argumentlist $LoginPath -credential $LogIn) {$LoginScript="$Betrieb$LoginScript"}
 #####LoginScriptende#####
 
 
@@ -77,8 +79,8 @@ if (Invoke-Command -ComputerName ********* -ScriptBlock {Test-Path -path $args[0
 #####User wird angelegt und anschließend der Gruppe zugeordnet
 
 if ($Mail -eq ""){
-New-ADUser -SamAccountName $Betrieb$Name -CannotChangePassword $True -Surname $Name -GivenName $VorName -displayname "$VorName $Name" -Name "$VorName $Name" -UserPrincipalName "$Betrieb$Name@*******.local" -PasswordNeverExpires $True -ProfilePath \\*******\userprofiles\$Betrieb$Name -ScriptPath $LoginScript -Enabled $True -AccountPassword $userpass -Server "*******" -credential $LogIn -Path "OU=$neu,DC=*********,DC=local";
-Add-ADGroupMember -Identity $neu -Members $Betrieb$Name -Server "********" -credential $LogIn
+New-ADUser -SamAccountName $Betrieb$Name -CannotChangePassword $True -Surname $Name -GivenName $VorName -displayname "$VorName $Name" -Name "$VorName $Name" -UserPrincipalName "$Betrieb$Name@*******.local" -PasswordNeverExpires $True -ProfilePath \\*******\userprofiles\$Betrieb$Name -ScriptPath $LoginScript -Enabled $True -AccountPassword $userpass -Server $ADhost -credential $LogIn -Path "OU=$neu,DC=*********,DC=local";
+Add-ADGroupMember -Identity $neu -Members $Betrieb$Name -Server $ADhost -credential $LogIn
 }else{
 
 }
