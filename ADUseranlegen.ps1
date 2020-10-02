@@ -28,7 +28,7 @@ function Scramble-String([string]$inputString){
     $characterArray = $inputString.ToCharArray()   
     $scrambledStringArray = $characterArray | Get-Random -Count $characterArray.Length     
     $outputString = -join $scrambledStringArray
-    return $outputString 
+    return $outputString
 }
 $password = Get-RandomCharacters -length 6 -characters 'ABCDEFGHKLMNPQRSTUVWXYZ23456789'
 $password = Scramble-String $password
@@ -41,15 +41,18 @@ if ($Name -eq ""){$Name = Read-Host "Name"}
 if ($VorName -eq ""){$VorName = Read-Host "VorName"}
 if ($VorName -eq ""){$VorName = $Betrieb}
 
-$pass = cat D:\*******.txt | ConvertTo-SecureString
+$PasswortDatei = "D:\PasswortDatei.txt"
+$ADhost = "" #ToDo IP-Adr. einfügen
+
+$pass = Get-Content $PasswortDatei | ConvertTo-SecureString
 $LogIn = New-Object System.Management.Automation.PsCredential("*hier User*", $pass)
 $Fehler="true"
-Try  { $Script:GetADUserResult =Get-ADUser -Identity $Betrieb$Name -Server "*DMC IP*" -credential $LogIn} Catch {$Fehler="false"}
+Try  { $Script:GetADUserResult =Get-ADUser -Identity $Betrieb$Name -Server $ADhost -credential $LogIn} Catch {$Fehler="false"}
 if ($Fehler -eq "true"){write-Host "User exestiert schon"; exit}
 $userpass= $password | ConvertTo-SecureString -AsPlainText -Force
 
 
-$gruppe=Get-ADGroup -Filter "Name -like '$Betrieb*'" -Server "*DMC IP*" -credential $LogIn
+$gruppe=Get-ADGroup -Filter "Name -like '$Betrieb*'" -Server $ADhost -credential $LogIn
 
 if ($gruppe.count -ne 1)
 {
